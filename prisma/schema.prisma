@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(AGENT)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tickets  Ticket[]  @relation("CreatedBy")
+  assigned Ticket[]  @relation("AssignedTo")
+  comments Comment[]
+
+  @@map("users")
+}
+
+model Ticket {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  status      TicketStatus @default(OPEN)
+  priority    Priority     @default(MEDIUM)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  createdById  String  @map("created_by_id")
+  assignedToId String? @map("assigned_to_id")
+
+  createdBy  User  @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedTo User? @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  comments Comment[]
+
+  @@map("tickets")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId   String @map("user_id")
+  ticketId String @map("ticket_id")
+
+  user   User   @relation(fields: [userId], references: [id])
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+
+  @@map("comments")
+}
+
+enum Role {
+  AGENT
+  SUPERVISOR
+  ADMIN
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}

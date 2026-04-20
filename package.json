@@ -1,0 +1,35 @@
+{
+  "name": "gestordesk-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsup src/server.ts --format esm --clean",
+    "start": "node dist/server.js",
+    "prisma:migrate": "node_modules/.bin/prisma migrate dev",
+    "prisma:generate": "node_modules/.bin/prisma generate"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^25.6.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/jwt": "^10.0.0",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.8.4",
+    "prisma": "^5.22.0",
+    "zod": "^4.3.6"
+  }
+}
+
