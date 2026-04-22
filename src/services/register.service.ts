@@ -5,6 +5,7 @@ interface RegisterServiceRequest {
     name: string
     email: string
     password: string
+    role?: 'AGENT' | 'SUPERVISOR' | 'ADMIN'
 }
 
 interface RegisterServiceResponse {
@@ -23,6 +24,7 @@ export class RegisterService {
         name,
         email,
         password,
+        role,
     }: RegisterServiceRequest): Promise<RegisterServiceResponse> {
       const userWithSameEmail = await
 this.usersRepository.findByEmail(email)
@@ -37,6 +39,7 @@ this.usersRepository.findByEmail(email)
             name,
             email,
             passwordHash,
+            role,
         })
 
         return { user }

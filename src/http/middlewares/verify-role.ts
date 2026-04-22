@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 
-type Role = 'AGENT' | 'SUPERVIDOR' | 'ADMIN'
+type Role = 'AGENT' | 'SUPERVISOR' | 'ADMIN'
 
 export function verifyRole(roleToVerify: Role) {
     return async (request: FastifyRequest, reply: FastifyReply) => {

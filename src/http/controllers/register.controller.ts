@@ -11,16 +11,17 @@ export async function registerController(
         name: z.string().min(2),
         email: z.string().email(),
         password: z.string().min(6),
+        role: z.enum (['AGENT', 'SUPERVISOR', 'ADMIN']).optional()
     })
 
-    const { name, email, password } = 
+    const { name, email, password, role} = 
 registerBodySchema.parse(request.body)
 
     const usersRepository = new PrismaUsersRepository()
     const registerService = new RegisterService (usersRepository)
 
     try{
-        const { user } = await registerService.execute ({ name, email, password })
+        const { user } = await registerService.execute ({ name, email, password, role })
         return reply.status(201).send ({ user })
     } catch (err) {
         if (err instanceof Error && err.message === 'EMAIL_TAKEN') {

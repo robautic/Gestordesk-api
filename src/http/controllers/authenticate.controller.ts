@@ -42,6 +42,7 @@ authenticateBodySchema.parse(request.body)
             .status(200)
             .send({ token })
     } catch (err) {
+        console.log(err)
         if (err instanceof Error && err.message === 'INVALID_CREDENTIALS') {
         return reply.status(401).send ({ error: 'Invalid credentials'})
      }
