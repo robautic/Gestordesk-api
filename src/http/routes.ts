@@ -3,6 +3,9 @@ import { registerController } from './controllers/register.controller.js'
 import { authenticateController } from './controllers/authenticate.controller.js'
 import { verifyJwt } from './middlewares/verify-jwt.js'
 import { verifyRole } from './middlewares/verify-role.js'
+import { createTicketController } from './controllers/create-ticket.controller.js'
+import { listTicketsController } from './controllers/list-tickets.controller.js'
+import { updateTicketStatusController } from './controllers/update-ticket-status.controller.js'
 
 export async function appRoutes(app: FastifyInstance){
     app.post('/users', registerController)
@@ -19,12 +22,8 @@ export async function appRoutes(app: FastifyInstance){
             return reply.status(200).send({message: 'Área restrita ao admin'})
         },
     )
-
-    app.get(
-        '/tickets/all',
-        {preHandler: [verifyJwt, verifyRole('SUPERVISOR')] },
-        async (request, reply) => {
-            return reply.status(200).send({ message: 'Área restrita ao supervisor' })
-        },
-    )
+    
+    app.post('/tickets', {preHandler: [verifyJwt]}, createTicketController)
+    app.get('/tickets', {preHandler: [verifyJwt]}, listTicketsController)
+    app.patch('/tickets/:id/status', {preHandler: [verifyJwt, verifyRole('SUPERVISOR')]}, updateTicketStatusController)
 }
