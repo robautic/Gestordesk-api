@@ -29,7 +29,7 @@ authenticateBodySchema.parse(request.body)
 
         const refreshToken = await reply.jwtSign(
             {role: user.role},
-            {sign: { sub: user.id, expiresIn: '7'}},
+            {sign: { sub: user.id, expiresIn: '7d'}},
         )
 
         return reply

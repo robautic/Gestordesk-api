@@ -6,6 +6,7 @@ import { verifyRole } from './middlewares/verify-role.js'
 import { createTicketController } from './controllers/create-ticket.controller.js'
 import { listTicketsController } from './controllers/list-tickets.controller.js'
 import { updateTicketStatusController } from './controllers/update-ticket-status.controller.js'
+import { refreshTokenController } from './controllers/refresh-token.controller.js'
 
 export async function appRoutes(app: FastifyInstance){
     app.post('/users', registerController)
@@ -26,4 +27,6 @@ export async function appRoutes(app: FastifyInstance){
     app.post('/tickets', {preHandler: [verifyJwt]}, createTicketController)
     app.get('/tickets', {preHandler: [verifyJwt]}, listTicketsController)
     app.patch('/tickets/:id/status', {preHandler: [verifyJwt, verifyRole('SUPERVISOR')]}, updateTicketStatusController)
+
+    app.patch('/token/refresh', refreshTokenController)
 }
