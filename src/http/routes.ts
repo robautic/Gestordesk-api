@@ -7,6 +7,9 @@ import { createTicketController } from './controllers/create-ticket.controller.j
 import { listTicketsController } from './controllers/list-tickets.controller.js'
 import { updateTicketStatusController } from './controllers/update-ticket-status.controller.js'
 import { refreshTokenController } from './controllers/refresh-token.controller.js'
+import { createCommentController } from './controllers/create-comment.controller.js'
+
+
 
 export async function appRoutes(app: FastifyInstance){
     app.post('/users', registerController)
@@ -23,7 +26,7 @@ export async function appRoutes(app: FastifyInstance){
             return reply.status(200).send({message: 'Área restrita ao admin'})
         },
     )
-    
+    app.post('/tickets/:id/comments', {preHandler: [verifyJwt]}, createCommentController)
     app.post('/tickets', {preHandler: [verifyJwt]}, createTicketController)
     app.get('/tickets', {preHandler: [verifyJwt]}, listTicketsController)
     app.patch('/tickets/:id/status', {preHandler: [verifyJwt, verifyRole('SUPERVISOR')]}, updateTicketStatusController)
