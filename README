@@ -1,0 +1,298 @@
+# GestorDesk API
+
+API REST para gestão de chamados de suporte técnico, construída com Node.js, TypeScript, Fastify, Prisma e PostgreSQL.
+
+## Tecnologias
+
+- **Node.js** com **TypeScript**
+- **Fastify** — framework web
+- **Prisma** — ORM
+- **PostgreSQL** — banco de dados
+- **Docker** — containerização
+- **JWT** — autenticação com access token e refresh token
+- **Zod** — validação de dados
+- **bcryptjs** — criptografia de senhas
+
+## Arquitetura
+
+O projeto segue os princípios SOLID com separação em três camadas:
+
+- **Controller** — recebe a requisição HTTP, valida os dados com Zod e devolve a resposta
+- **Service** — contém as regras de negócio
+- **Repository** — única camada que fala com o banco de dados via Prisma
+
+## Pré-requisitos
+
+- Node.js 18+
+- Docker e Docker Compose
+
+## Como rodar
+
+**1. Clone o repositório**
+
+```bash
+git clone https://github.com/seu-usuario/gestordesk-api
+cd gestordesk-api
+```
+
+**2. Instale as dependências**
+
+```bash
+npm install
+```
+
+**3. Configure as variáveis de ambiente**
+
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+NODE_ENV=dev
+PORT=3333
+DATABASE_URL="postgresql://docker:docker@localhost:5432/gestordesk?schema=public"
+JWT_SECRET=sua-chave-secreta
+```
+
+**4. Suba o banco de dados**
+
+```bash
+docker-compose up -d
+```
+
+**5. Execute as migrations**
+
+```bash
+npx prisma migrate dev
+```
+
+**6. Inicie o servidor**
+
+```bash
+npm run dev
+```
+
+O servidor estará rodando em `http://localhost:3333`.
+
+---
+
+## Rotas
+
+### Autenticação
+
+#### Cadastrar usuário
+```
+POST /users
+```
+
+Body:
+```json
+{
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "password": "123456",
+  "role": "AGENT"
+}
+```
+
+> `role` é opcional. Valores aceitos: `AGENT`, `SUPERVISOR`, `ADMIN`. Padrão: `AGENT`.
+
+Resposta `201`:
+```json
+{
+  "user": {
+    "id": "uuid",
+    "name": "João Silva",
+    "email": "joao@email.com",
+    "role": "AGENT",
+    "createdAt": "2026-04-27T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+#### Autenticar usuário
+```
+POST /sessions
+```
+
+Body:
+```json
+{
+  "email": "joao@email.com",
+  "password": "123456"
+}
+```
+
+Resposta `200`:
+```json
+{
+  "token": "eyJ..."
+}
+```
+
+> O refresh token é salvo automaticamente em um cookie `httpOnly`.
+
+---
+
+#### Renovar token
+```
+PATCH /token/refresh
+```
+
+> Não requer body. O refresh token é lido automaticamente do cookie.
+
+Resposta `200`:
+```json
+{
+  "token": "eyJ..."
+}
+```
+
+---
+
+### Tickets
+
+> Todas as rotas de tickets requerem o header `Authorization: Bearer TOKEN`.
+
+#### Criar ticket
+```
+POST /tickets
+```
+
+Body:
+```json
+{
+  "title": "Computador não liga",
+  "description": "O computador da recepção não está ligando desde hoje de manhã",
+  "priority": "HIGH"
+}
+```
+
+> `priority` é opcional. Valores aceitos: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`. Padrão: `MEDIUM`.
+
+Resposta `201`:
+```json
+{
+  "ticket": {
+    "id": "uuid",
+    "title": "Computador não liga",
+    "description": "O computador da recepção não está ligando desde hoje de manhã",
+    "status": "OPEN",
+    "priority": "HIGH",
+    "createdById": "uuid",
+    "assignedToId": null,
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+#### Listar tickets
+```
+GET /tickets
+```
+
+> **AGENT** vê apenas os próprios tickets. **SUPERVISOR** e **ADMIN** veem todos.
+
+Resposta `200`:
+```json
+{
+  "tickets": [
+    {
+      "id": "uuid",
+      "title": "Computador não liga",
+      "description": "O computador da recepção não está ligando desde hoje de manhã",
+      "status": "OPEN",
+      "priority": "HIGH",
+      "createdById": "uuid",
+      "createdAt": "2026-04-27T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+#### Atualizar status do ticket
+```
+PATCH /tickets/:id/status
+```
+
+> Requer papel `SUPERVISOR` ou superior.
+
+Body:
+```json
+{
+  "status": "IN_PROGRESS"
+}
+```
+
+> Valores aceitos: `OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`.
+
+Resposta `200`:
+```json
+{
+  "ticket": {
+    "id": "uuid",
+    "status": "IN_PROGRESS"
+  }
+}
+```
+
+---
+
+### Comentários
+
+#### Adicionar comentário em um ticket
+```
+POST /tickets/:id/comments
+```
+
+> Requer o header `Authorization: Bearer TOKEN`.
+
+Body:
+```json
+{
+  "content": "Já verificamos o cabo de energia, o problema persiste"
+}
+```
+
+Resposta `201`:
+```json
+{
+  "comment": {
+    "id": "uuid",
+    "content": "Já verificamos o cabo de energia, o problema persiste",
+    "userId": "uuid",
+    "ticketId": "uuid",
+    "createdAt": "2026-04-27T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+## RBAC — Controle de acesso por papel
+
+| Rota | AGENT | SUPERVISOR | ADMIN |
+|------|-------|------------|-------|
+| `POST /users` | ✅ | ✅ | ✅ |
+| `POST /sessions` | ✅ | ✅ | ✅ |
+| `PATCH /token/refresh` | ✅ | ✅ | ✅ |
+| `POST /tickets` | ✅ | ✅ | ✅ |
+| `GET /tickets` | ✅ próprios | ✅ todos | ✅ todos |
+| `PATCH /tickets/:id/status` | ❌ | ✅ | ✅ |
+| `POST /tickets/:id/comments` | ✅ | ✅ | ✅ |
+
+## Erros comuns
+
+| Código | Descrição |
+|--------|-----------|
+| `400` | Dados inválidos no body |
+| `401` | Token ausente ou expirado |
+| `403` | Sem permissão para acessar a rota |
+| `404` | Recurso não encontrado |
+| `409` | Email já cadastrado |
+| `500` | Erro interno do servidor |
