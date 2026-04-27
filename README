@@ -31,7 +31,7 @@ O projeto segue os princípios SOLID com separação em três camadas:
 **1. Clone o repositório**
 
 ```bash
-git clone https://github.com/seu-usuario/gestordesk-api
+git clone git clone https://github.com/robautic/Gestordesk-api
 cd gestordesk-api
 ```
 
