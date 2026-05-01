@@ -1,0 +1,13 @@
+import 'reflect-metadata';
+import {NestFactory} from '@nestjs/core';
+import { AppModule } from './app.module.js';
+
+async function bootstrap () {
+    const app = await NestFactory.create(AppModule);
+
+    await app.listen(3333);
+    console.log('Aplicação NestJs rodando em: http://localhost:3333');
+
+}
+
+bootstrap();
